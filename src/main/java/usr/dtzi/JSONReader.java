@@ -20,6 +20,7 @@ public class JSONReader {
   }
 
   public <T> List<T> nodesToArray(Class<T> _class) throws FileNotFoundException, IOException {
+
     FileReader reader = new FileReader(f);
     List<String> lines = reader.readAllLines();
     var objs = new ArrayList<T>();
