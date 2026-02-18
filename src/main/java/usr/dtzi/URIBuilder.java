@@ -26,11 +26,14 @@ public class URIBuilder {
       value = "\"" + value + "\"";
     }
     key = "\"" + key + "\"";
-    return URLEncoder.encode(key + ":" + value, charset);
+    return URLEncoder.encode(
+        key + ":" + value
+        , charset)
+      +",";
   }
 
   public URI build() throws URISyntaxException {
-    this.uri = this.uri + rightBracket;
+    this.uri = this.uri.substring(0, this.uri.length()-1) + rightBracket;
     IO.println("Final URI: " + this.uri);
     return new URI(this.uri);
   }

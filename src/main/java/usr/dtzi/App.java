@@ -1,36 +1,25 @@
 package usr.dtzi;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandlers;
-import tools.jackson.core.JsonPointer;
+import java.io.File;
+import java.io.PrintWriter;
+import usr.dtzi.items.Weapon;
 
 public class App {
   public static void main(String[] args) {
-    try {
-      var client = HttpClient.newHttpClient();
-      var uri = new URIBuilder(
-          "https://api2.warera.io/trpc/transaction.getPaginatedTransactions"
-          )
-        .addParam("limit", 10)
-        .build();
-      var env = System.getenv();
-      var req = HttpRequest
-        .newBuilder(uri)
-        .GET()
-        .header("X-API-Key", env.get("WARERA_API_KEY"))
-        .build();
+    JSONReader reader = new JSONReader(new File("write.json"));
+    reader.nodesToArray(Weapon.class);
+  }
 
-      IO.println("Request: " + req.toString());
-      IO.println("Headers: " + req.headers());
-      var response = client.send(req, BodyHandlers.ofString());
-      IO.println(response.body());
+  public static void connect() {
+    try {
+      var writer = new PrintWriter(new File("write.json"));
+      var response = APIPresets.getLatestTransactions(1000, "knife");
+      writer.write(response);
+      writer.close();
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
     }
   }
-
-void addParam(String key, String value) {
-}
+  
 }
