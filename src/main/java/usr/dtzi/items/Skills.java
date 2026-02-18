@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public record Skills(
     @JsonProperty("attack")
-    @JsonAlias({"dodge","armor","criticalChance", "precision"})
-    int attack,
-    int criticalChance) {
+    @JsonAlias({"dodge","armor","criticalDamages", "precision"})
+    int skill1,
+    @JsonProperty("criticalChance")
+    Integer skill2) {
 }

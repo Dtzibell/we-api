@@ -20,29 +20,34 @@ public class APIPresets {
       String itemCode) throws 
     URISyntaxException, IOException, InterruptedException {
 
-    String finalJson = "[";
+    String finalJson = "";
+    String cursor = "";
 
     do {
+
       var URI = new URIBuilder(BASE_URI.concat(
             "transaction.getPaginatedTransactions"
             ))
         .addParam("limit", 100)
         .addParam("itemCode", itemCode)
-        .addParam("cursor", "")
+        .addParam("cursor", cursor)
         .build();
+
       var req = HttpRequest
         .newBuilder(URI)
         .GET()
         .header("X-API-Key", API_KEY)
         .build();
+
       HttpResponse<String> response = client.send(req, BodyHandlers.ofString());
-      String cursor = mapper.readTree(response.body()).findPath("nextCursor").asString();
+      cursor = mapper.readTree(response.body()).findPath("nextCursor").asString();
       IO.println(cursor);
-      finalJson = finalJson.concat(response.body());
+      finalJson = finalJson.concat(response.body() + "\n");
       amount -= 100;
+
     } while (amount > 0);
 
-    return finalJson + "]";
+    return finalJson;
   }
 
   public static void getLargestOrder(String itemCode) {

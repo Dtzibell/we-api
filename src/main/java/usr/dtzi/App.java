@@ -2,12 +2,23 @@ package usr.dtzi;
 
 import java.io.File;
 import java.io.PrintWriter;
-import usr.dtzi.items.Weapon;
+import usr.dtzi.items.Equipment;
+import usr.dtzi.items.filter.ItemFilter;
+
+import java.util.List;
 
 public class App {
   public static void main(String[] args) {
-    JSONReader reader = new JSONReader(new File("write.json"));
-    reader.nodesToArray(Weapon.class);
+    try {
+      // App.connect();
+      JSONReader reader = new JSONReader(new File("write.json"));
+      List<Equipment> eq = reader.nodesToArray(Equipment.class);
+      var filter = new ItemFilter(eq);
+      var filteredEq = filter.filter();
+      IO.println(filteredEq.toString());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   public static void connect() {
