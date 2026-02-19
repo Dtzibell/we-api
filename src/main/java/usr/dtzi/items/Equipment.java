@@ -1,13 +1,20 @@
 package usr.dtzi.items;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public record Equipment(
-    @JsonProperty("money") double price,
+
+    @JsonProperty("money") 
+    double price,
     String itemCode, 
-    @JsonProperty("item") ItemDetails details) {
+    @JsonProperty("item") 
+    ItemDetails details) 
+
+    implements Serializable {
 
     public Integer getSkill1() {
       return this.details().skills().skill1();

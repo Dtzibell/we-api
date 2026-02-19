@@ -7,33 +7,74 @@ import usr.dtzi.api.APIPresets;
 import usr.dtzi.items.filter.ItemBounds;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.io.FileWriter;
+
+
+import tools.jackson.databind.ObjectMapper;
 
 public class App {
   public static void main(String[] args) {
+    var items = Arrays.asList(
+    "knife",
+    "gun",
+    "rifle",
+    "sniper",
+    "tank",
+    "jet",
+    "helmet1",
+    "helmet2",
+    "helmet3",
+    "helmet4",
+    "helmet5",
+    "helmet6",
+    "chest1",
+    "chest2",
+    "chest3",
+    "chest4",
+    "chest5",
+    "chest6",
+    "pants1",
+    "pants2",
+    "pants3",
+    "pants4",
+    "pants5",
+    "pants6",
+    "boots1",
+    "boots2",
+    "boots3",
+    "boots4",
+    "boots5",
+    "boots6",
+    "gloves1",
+    "gloves2",
+    "gloves3",
+    "gloves4",
+    "gloves5",
+    "gloves6");
     try {
-      // App.connect();
-      JSONReader reader = new JSONReader(new File("write.json"));
+      APIPresets.getLatestTransactions(2000, "knife");
+      JSONReader reader = new JSONReader(new File("knife_2000.json"));
       List<Equipment> eq = reader.nodesToList(Equipment.class);
       var filter = new ItemFilter(eq);
       var filteredEq = filter.filter(ItemBounds::isWithin);
       IO.println(filteredEq.toString());
+      var f = new FileWriter("filtered_knife.json");
+      var mapper = new ObjectMapper();
+      filteredEq.forEach((e) -> {
+          try {
+            f.write(mapper.writeValueAsString(e) + "\n");
+          } catch (IOException exc) {
+            exc.printStackTrace();
+          }
+      }
+      );
+      f.flush();
+      f.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
-
-  public static void connect() {
-    try {
-      var writer = new PrintWriter(new File("write.json"));
-      var response = APIPresets.getLatestTransactions(1000, "knife");
-      writer.write(response);
-      writer.close();
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(1);
-    }
-  }
-  
 }

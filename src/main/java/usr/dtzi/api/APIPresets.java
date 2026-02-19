@@ -1,11 +1,17 @@
 package usr.dtzi.api;
 
 import java.io.IOException;
+import java.io.File;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -16,45 +22,61 @@ public class APIPresets {
   static ObjectMapper mapper = new ObjectMapper();
   static String API_KEY = System.getenv().get("WARERA_API_KEY");
 
+  static ScheduledExecutorService ses;
+
   /** 
    * @param amount amount of transactions to get
    * @param itemCode the name of the item
-   * @return A string containing the transactions in JSON. 
-   *         It has a new line character every 100 items.
    *
+   * <p> the API calls run every 600ms.
    */
-  public static String getLatestTransactions(int amount, 
+  public static void getLatestTransactions(int amount, 
       String itemCode) throws 
     URISyntaxException, IOException, InterruptedException {
 
-    String finalJson = "";
-    String cursor = "";
+    AtomicInteger remaining = new AtomicInteger(amount);
+    AtomicReference<String> cursor = new AtomicReference<>("");
+    ResponseManager rmgr = new ResponseManager();
+    File cache = new File(itemCode + "_" + amount + ".json");
+    ScheduledExecutorService ses = Executors.newScheduledThreadPool(1); 
 
-    do {
+    ses.scheduleAtFixedRate(() -> {
+      if (remaining.get() <= 0) {
+        try {
+          rmgr.writeResponse(cache);
+          ses.shutdown();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      } else {
+        try {
+          var URI = new URIBuilder(BASE_URI.concat(
+                "transaction.getPaginatedTransactions"
+                ))
+            .addParam("limit", 100)
+            .addParam("itemCode", itemCode)
+            .addParam("cursor", cursor)
+            .build();
 
-      var URI = new URIBuilder(BASE_URI.concat(
-            "transaction.getPaginatedTransactions"
-            ))
-        .addParam("limit", 100)
-        .addParam("itemCode", itemCode)
-        .addParam("cursor", cursor)
-        .build();
+          var req = HttpRequest
+            .newBuilder(URI)
+            .GET()
+            .header("X-API-Key", API_KEY)
+            .build();
 
-      var req = HttpRequest
-        .newBuilder(URI)
-        .GET()
-        .header("X-API-Key", API_KEY)
-        .build();
-
-      HttpResponse<String> response = client.send(req, BodyHandlers.ofString());
-      cursor = mapper.readTree(response.body()).findPath("nextCursor").asString();
-      IO.println(cursor);
-      finalJson = finalJson.concat(response.body() + "\n");
-      amount -= 100;
-
-    } while (amount > 0);
-
-    return finalJson;
+          HttpResponse<String> response = client.send(req, BodyHandlers.ofString());
+          rmgr.appendResponse(response);
+          cursor.set(mapper.readTree(response.body()).findPath("nextCursor").asString());
+          IO.println(cursor);
+          remaining.addAndGet(-100);
+          IO.println(remaining);
+        } catch (Exception e) {
+          e.printStackTrace();
+          ses.shutdown();
+        }
+      }
+    }, 0, 600, TimeUnit.MILLISECONDS);
+    ses.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
   }
 
   public static void getLargestOrder(String itemCode) {

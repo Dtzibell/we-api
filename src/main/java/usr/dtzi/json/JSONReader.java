@@ -9,23 +9,36 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.ArrayList;
-
+/**
+ * A JSON processor class.
+ */
 public class JSONReader {
 
-  File f;
-  ObjectMapper mapper = new ObjectMapper();
+  /**
+   * The {@link File} that is to be processed.
+   */
+  private File file;
+  private ObjectMapper mapper = new ObjectMapper();
 
   public JSONReader(File f) {
-    this.f = f;
+    this.file = f;
+  }
+
+  public void setFile(File f) {
+    this.file = f;
+  }
+   
+  public File getFile(File f) {
+    return this.file;
   }
 
   /** 
-   * @param _class the class of the object that is serialized to JSON
+   * @param _class the class of the object that is serialized in {@link JSONReader#file}.
    * @return a List containing the objects
    */
   public <T> List<T> nodesToList(Class<T> _class) throws FileNotFoundException, IOException {
 
-    FileReader reader = new FileReader(f);
+    FileReader reader = new FileReader(file);
     List<String> lines = reader.readAllLines();
     var objs = new ArrayList<T>();
     for (String line : lines) {
@@ -36,7 +49,7 @@ public class JSONReader {
         objs.add(obj);
       }
     }
-    IO.println("Processed file: " + f.getName() + ", total objects: " + objs.size());
+    IO.println("Processed file: " + file.getName() + ", total objects: " + objs.size());
     reader.close();
     return objs;
   }
