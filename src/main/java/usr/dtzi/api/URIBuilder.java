@@ -2,6 +2,7 @@ package usr.dtzi.api;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public class URIBuilder {
     this.uri = 
       this.uri.substring(0, this.uri.length()-1) // removes the last comma;
       + rightBracket; 
-    IO.println("Final URI: " + this.uri);
+    // IO.println("Final URI: " + URLDecoder.decode(this.uri, charset));
     return new URI(this.uri);
   }
 }

@@ -2,6 +2,7 @@ package usr.dtzi.api;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -13,7 +14,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.JsonNodeException;
 
 public class APIPresets {
 
@@ -31,8 +34,7 @@ public class APIPresets {
    * <p> the API calls run every 600ms.
    */
   public static void getLatestTransactions(int amount, 
-      String itemCode) throws 
-    URISyntaxException, IOException, InterruptedException {
+      String itemCode) throws InterruptedException {
 
     AtomicInteger remaining = new AtomicInteger(amount);
     AtomicReference<String> cursor = new AtomicReference<>("");
@@ -67,9 +69,21 @@ public class APIPresets {
           HttpResponse<String> response = client.send(req, BodyHandlers.ofString());
           rmgr.appendResponse(response);
           cursor.set(mapper.readTree(response.body()).findPath("nextCursor").asString());
-          IO.println(cursor);
+          IO.println("Next cursor: " + cursor);
           remaining.addAndGet(-100);
-          IO.println(remaining);
+          IO.println("Items remaining: " + remaining);
+        } catch (JsonNodeException e) {
+          System.out.printf("""
+              Stopping at missing node for item: %s
+              Reason: missing node (typical for old data)
+              Processed %d items
+              """.stripIndent(), itemCode, remaining.get());
+          try {
+            rmgr.writeResponse(cache);
+          } catch (Exception exc) {
+            exc.printStackTrace();
+          }
+          ses.shutdown();
         } catch (Exception e) {
           e.printStackTrace();
           ses.shutdown();

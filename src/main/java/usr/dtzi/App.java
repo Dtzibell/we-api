@@ -18,12 +18,12 @@ import tools.jackson.databind.ObjectMapper;
 public class App {
   public static void main(String[] args) {
     var items = Arrays.asList(
-    "knife",
-    "gun",
-    "rifle",
-    "sniper",
-    "tank",
-    "jet",
+    // "knife",
+    // "gun",
+    // "rifle",
+    // "sniper",
+    // "tank",
+    // "jet",
     "helmet1",
     "helmet2",
     "helmet3",
@@ -55,24 +55,30 @@ public class App {
     "gloves5",
     "gloves6");
     try {
-      APIPresets.getLatestTransactions(2000, "knife");
-      JSONReader reader = new JSONReader(new File("knife_2000.json"));
-      List<Equipment> eq = reader.nodesToList(Equipment.class);
-      var filter = new ItemFilter(eq);
-      var filteredEq = filter.filter(ItemBounds::isWithin);
-      IO.println(filteredEq.toString());
-      var f = new FileWriter("filtered_knife.json");
-      var mapper = new ObjectMapper();
-      filteredEq.forEach((e) -> {
-          try {
-            f.write(mapper.writeValueAsString(e) + "\n");
-          } catch (IOException exc) {
-            exc.printStackTrace();
-          }
+      for (String itemCode : items) {
+        IO.println("Processing: " + itemCode);
+        var amount = 200;
+        APIPresets.getLatestTransactions(amount, itemCode);
+        var file = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
+        file.createNewFile();
+        JSONReader reader = new JSONReader(file);
+        List<Equipment> eq = reader.nodesToList(Equipment.class);
+        var filter = new ItemFilter(eq);
+        var filteredEq = filter.filter(ItemBounds::isWithin);
+        var fileWriter = new FileWriter("filtered_" + itemCode + ".json");
+        var mapper = new ObjectMapper();
+        filteredEq.forEach((e) -> {
+            try {
+              fileWriter.write(mapper.writeValueAsString(e) + "\n");
+            } catch (IOException exc) {
+              exc.printStackTrace();
+            }
+        }
+        );
+        fileWriter.flush();
+        fileWriter.close();
+        IO.println("Finished processing: " + itemCode);
       }
-      );
-      f.flush();
-      f.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
