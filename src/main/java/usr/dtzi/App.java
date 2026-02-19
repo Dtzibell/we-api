@@ -18,12 +18,12 @@ import tools.jackson.databind.ObjectMapper;
 public class App {
   public static void main(String[] args) {
     var items = Arrays.asList(
-    // "knife",
-    // "gun",
-    // "rifle",
-    // "sniper",
-    // "tank",
-    // "jet",
+    "knife",
+    "gun",
+    "rifle",
+    "sniper",
+    "tank",
+    "jet",
     "helmet1",
     "helmet2",
     "helmet3",
@@ -53,19 +53,29 @@ public class App {
     "gloves3",
     "gloves4",
     "gloves5",
-    "gloves6");
+    "gloves6"
+    );
     try {
+      new File("fullJSONs").mkdir();
+      new File("filteredJSONs").mkdir();
+
       for (String itemCode : items) {
+
         IO.println("Processing: " + itemCode);
-        var amount = 200;
+        var amount = 2000;
         APIPresets.getLatestTransactions(amount, itemCode);
-        var file = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
-        file.createNewFile();
-        JSONReader reader = new JSONReader(file);
+
+        var fullFile = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
+        fullFile.createNewFile();
+        JSONReader reader = new JSONReader(fullFile);
         List<Equipment> eq = reader.nodesToList(Equipment.class);
+
         var filter = new ItemFilter(eq);
         var filteredEq = filter.filter(ItemBounds::isWithin);
-        var fileWriter = new FileWriter("filtered_" + itemCode + ".json");
+        var filteredFile = new File("filteredJSONs/" + "filtered_" + itemCode + ".json");
+        filteredFile.createNewFile();
+
+        var fileWriter = new FileWriter(filteredFile);
         var mapper = new ObjectMapper();
         filteredEq.forEach((e) -> {
             try {
@@ -77,6 +87,7 @@ public class App {
         );
         fileWriter.flush();
         fileWriter.close();
+
         IO.println("Finished processing: " + itemCode);
       }
     } catch (Exception e) {

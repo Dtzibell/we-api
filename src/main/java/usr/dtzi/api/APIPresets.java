@@ -39,7 +39,7 @@ public class APIPresets {
     AtomicInteger remaining = new AtomicInteger(amount);
     AtomicReference<String> cursor = new AtomicReference<>("");
     ResponseManager rmgr = new ResponseManager();
-    File cache = new File(itemCode + "_" + amount + ".json");
+    File cache = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
     ScheduledExecutorService ses = Executors.newScheduledThreadPool(1); 
 
     ses.scheduleAtFixedRate(() -> {
