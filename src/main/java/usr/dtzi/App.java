@@ -1,10 +1,13 @@
 package usr.dtzi;
 
-import java.io.File;
-import java.io.PrintWriter;
 import usr.dtzi.items.Equipment;
 import usr.dtzi.items.filter.ItemFilter;
+import usr.dtzi.json.JSONReader;
+import usr.dtzi.api.APIPresets;
+import usr.dtzi.items.filter.ItemBounds;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.List;
 
 public class App {
@@ -12,9 +15,9 @@ public class App {
     try {
       // App.connect();
       JSONReader reader = new JSONReader(new File("write.json"));
-      List<Equipment> eq = reader.nodesToArray(Equipment.class);
+      List<Equipment> eq = reader.nodesToList(Equipment.class);
       var filter = new ItemFilter(eq);
-      var filteredEq = filter.filter();
+      var filteredEq = filter.filter(ItemBounds::isWithin);
       IO.println(filteredEq.toString());
     } catch (Exception e) {
       e.printStackTrace();

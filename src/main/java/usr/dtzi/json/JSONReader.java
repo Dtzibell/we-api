@@ -1,4 +1,4 @@
-package usr.dtzi;
+package usr.dtzi.json;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,7 +19,11 @@ public class JSONReader {
     this.f = f;
   }
 
-  public <T> List<T> nodesToArray(Class<T> _class) throws FileNotFoundException, IOException {
+  /** 
+   * @param _class the class of the object that is serialized to JSON
+   * @return a List containing the objects
+   */
+  public <T> List<T> nodesToList(Class<T> _class) throws FileNotFoundException, IOException {
 
     FileReader reader = new FileReader(f);
     List<String> lines = reader.readAllLines();
@@ -35,14 +39,5 @@ public class JSONReader {
     IO.println("Processed file: " + f.getName() + ", total objects: " + objs.size());
     reader.close();
     return objs;
-
-    // for (JsonNode node : root) {
-
-    //   var items = node.findPath("items");
-    //   IO.println(items.size());
-
-
-    // }
-    // return objs;
   }
 }

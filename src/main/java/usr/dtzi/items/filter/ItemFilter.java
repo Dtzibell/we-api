@@ -1,6 +1,7 @@
 package usr.dtzi.items.filter;
 
 import usr.dtzi.items.Equipment;
+import java.util.function.Predicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,17 +9,22 @@ import java.util.List;
 public class ItemFilter { 
 
   List<Equipment> eq; 
-  String quality;
 
+  /**
+   * @param eq  a list of {@link Equipment}.
+   */
   public ItemFilter(List<Equipment> eq) {
     this.eq = eq;
-    this.quality = eq.get(0).itemCode();
   }
 
-  public List<Equipment> filter() {
+  /** 
+   * @param   filter  a filter that items are passed by.
+   * @return  a list containing items that pass {@code filter}.
+   */
+  public List<Equipment> filter(Predicate<Equipment> filter) {
     var newLst = new ArrayList<Equipment>();
     for (Equipment item : this.eq) {
-      if (ItemBounds.isWithin(item)) {
+      if (filter.test(item)) {
         newLst.add(item);
       };
     }

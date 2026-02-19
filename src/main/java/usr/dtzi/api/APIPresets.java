@@ -1,4 +1,4 @@
-package usr.dtzi;
+package usr.dtzi.api;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -16,6 +16,13 @@ public class APIPresets {
   static ObjectMapper mapper = new ObjectMapper();
   static String API_KEY = System.getenv().get("WARERA_API_KEY");
 
+  /** 
+   * @param amount amount of transactions to get
+   * @param itemCode the name of the item
+   * @return A string containing the transactions in JSON. 
+   *         It has a new line character every 100 items.
+   *
+   */
   public static String getLatestTransactions(int amount, 
       String itemCode) throws 
     URISyntaxException, IOException, InterruptedException {
@@ -51,5 +58,6 @@ public class APIPresets {
   }
 
   public static void getLargestOrder(String itemCode) {
+    // get the largest buy order of an item.
   }
 }

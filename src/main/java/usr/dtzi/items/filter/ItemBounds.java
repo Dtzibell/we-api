@@ -54,11 +54,21 @@ public class ItemBounds {
     bounds.put("gloves6", new PredicateDuo<>(ItemBounds.geq(39)));
   }
 
+  /** 
+   * @param   eq  an Equipment
+   * @return  whether the {@link Equipment} is better than 
+   *          {@link ItemBounds#bounds}.
+   */
   public static boolean isWithin(Equipment eq) {
     PredicateDuo<Integer> predicates = bounds.get(eq.itemCode());
     return predicates.test(eq.getSkill1(), eq.getSkill2());
   }
 
+  /** 
+   * @param   x
+   * @return  a function that consumes a y and returns whether x is 
+   *          larger or equal then y.
+   */
   private static Predicate<Integer> geq(int x) {
     return ((y) -> x <= y);
   }
