@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html","k":"18"},{"l":"usr.dtzi"},{"l":"usr.dtzi.api"},{"l":"usr.dtzi.helpers"},{"l":"usr.dtzi.items"},{"l":"usr.dtzi.items.filter"},{"l":"usr.dtzi.json"}];updateSearchResults();
