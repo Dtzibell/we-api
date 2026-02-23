@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.exc.JsonNodeException;
 
@@ -101,7 +100,7 @@ public class APIPresets {
           ses.shutdown();
         }
       }
-    }, 0, 600, TimeUnit.MILLISECONDS);
+    }, 0, 750, TimeUnit.MILLISECONDS);
     ses.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
   }
 
