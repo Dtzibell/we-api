@@ -3,6 +3,7 @@ package usr.dtzi.api;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -27,6 +28,27 @@ public class APIPresets {
 
   static ScheduledExecutorService ses;
 
+  private static URI buildURI(int limit, String itemCode, 
+      AtomicReference<String> cursor) throws URISyntaxException {
+    var uri = new URIBuilder(BASE_URI.concat(
+                    "transaction.getPaginatedTransactions"
+                    ))
+                .addParam("limit", limit)
+                .addParam("itemCode", itemCode)
+                .addParam("cursor", cursor.get())
+                .build();
+    return uri;
+  }
+  
+  private static HttpRequest fetchPage(URI uri) {
+    var req = HttpRequest
+      .newBuilder(uri)
+      .GET()
+      .header("X-API-Key", API_KEY)
+      .build();
+    return req;
+  }
+
   /** 
    * @param amount amount of transactions to get
    * @param itemCode the name of the item
@@ -36,6 +58,7 @@ public class APIPresets {
   public static void getLatestTransactions(int amount, 
       String itemCode) throws InterruptedException {
 
+    var limit = 100;
     AtomicInteger remaining = new AtomicInteger(amount);
     AtomicReference<String> cursor = new AtomicReference<>("");
     ResponseManager rmgr = new ResponseManager();
@@ -52,19 +75,8 @@ public class APIPresets {
         }
       } else {
         try {
-          var URI = new URIBuilder(BASE_URI.concat(
-                "transaction.getPaginatedTransactions"
-                ))
-            .addParam("limit", 100)
-            .addParam("itemCode", itemCode)
-            .addParam("cursor", cursor)
-            .build();
-
-          var req = HttpRequest
-            .newBuilder(URI)
-            .GET()
-            .header("X-API-Key", API_KEY)
-            .build();
+          var URI = APIPresets.buildURI(limit, itemCode, cursor);
+          var req = APIPresets.fetchPage(URI);
 
           HttpResponse<String> response = client.send(req, BodyHandlers.ofString());
           rmgr.appendResponse(response);
