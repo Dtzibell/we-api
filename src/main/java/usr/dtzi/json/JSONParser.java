@@ -3,38 +3,30 @@ package usr.dtzi.json;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
-
-
-import java.time.format.DateTimeFormatterBuilder;
-
+import java.util.List;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.io.Reader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Optional;
+import java.util.ArrayList;
+import java.time.format.DateTimeFormatterBuilder;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.JsonNode;
-import java.util.List;
-import java.util.Optional;
-import java.util.ArrayList;
-import java.util.Arrays;
+
 /**
  * A JSON processor class.
  */
-public class JSONReader {
+public class JSONParser {
 
   private String contents;
   private ObjectMapper mapper = new ObjectMapper();
+  private CursorParser parser = new CursorParser();
 
-  /**
-   * Class to parse cursors to dates.
-   *
-   */
-  public class CursorParser {
+  protected class CursorParser {
 
     /**
      * @param  cursor
@@ -59,25 +51,25 @@ public class JSONReader {
     }
   }
 
-  private CursorParser parser;
-
-  public JSONReader(JsonNode n) {
+  public JSONParser(JsonNode n) {
     this.contents = n.toString();
   }
 
-  // s has to be strictly formatted as a JSON
-  public JSONReader(String s) {
+  /**
+   * @param s contents that are strictly formatted as a json
+   */
+  public JSONParser(String s) {
     this.contents = s;
   }
 
-  public String readFile(File f) throws IOException {
+  private String readFile(File f) throws IOException {
     var freader = new FileReader(f);
     List<String> lines = freader.readAllLines();
     freader.close();
     return String.join("\n", lines);
   }
 
-  public JSONReader(File f) {
+  public JSONParser(File f) {
     try {
       this.contents = readFile(f);
     } catch (IOException e) {
@@ -86,13 +78,7 @@ public class JSONReader {
     }
   }
 
-  public void setContents(File f) {
-    try {
-      this.contents = readFile(f);
-    } catch (IOException e) {
-      System.out.printf("""
-          File %s does not exist""", f.getAbsolutePath());
-    }
+  public JSONParser() {
   }
 
   public LocalDateTime parseDate() {
@@ -100,17 +86,9 @@ public class JSONReader {
     var date = parser.parse(cursor.asString());
     return date;
   }
-  
-  public void setContents(String s) {
-    this.contents = s;
-  }
-   
-  public String getContents() {
-    return this.contents;
-  }
 
   /** 
-   * @param _class the class of the object that is serialized in {@link JSONReader#contents}.
+   * @param _class the class of the object that is serialized in {@link JSONParser#contents}.
    * @return a List containing the objects
    */
   public <T> List<T> nodesToList(Class<T> _class) {
@@ -128,13 +106,35 @@ public class JSONReader {
     return objs;
   }
 
-  public Optional<LocalDateTime> getFileCreationDate() throws IOException {
-    try (var reader = new BufferedReader(new FileReader(this.contents))) {
+  public Optional<LocalDateTime> getDataCreationDate() throws IOException {
+    try {
+      var reader = new BufferedReader(Reader.of(this.contents));
       return Optional.of(this.mapper.
         readValue(reader.readLine(), ZonedDateTime.class)
         .toLocalDateTime());
     } catch (FileNotFoundException e) {
+      // e.printStackTrace();
       return Optional.empty();
+    } catch (Exception e) {
+      IO.println("File not found.");
+      return Optional.empty();
+    }
+  }
+
+  public void setContents(String s) {
+    this.contents = s;
+  }
+   
+  private String getContents() {
+    return this.contents;
+  }
+
+  public void setContents(File f) {
+    try {
+      this.contents = readFile(f);
+    } catch (IOException e) {
+      System.out.printf("""
+          File %s does not exist""", f.getAbsolutePath());
     }
   }
 

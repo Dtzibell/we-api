@@ -1,6 +1,9 @@
 package usr.dtzi.api;
 
+import java.awt.Cursor;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -22,7 +25,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.exc.JsonNodeException;
 import usr.dtzi.items.Equipment;
-import usr.dtzi.json.JSONReader;
+import usr.dtzi.json.JSONParser;
 
 public class APIPresets {
 
@@ -65,62 +68,77 @@ public class APIPresets {
     var limit = 100;
     AtomicInteger remaining = new AtomicInteger(amount);
     AtomicReference<String> cursor = new AtomicReference<>("");
+    var accumulator = ItemAccumulator.of(Equipment.class);
+    var parser = new JSONParser();
 
     File maybeOldFile = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
-    Optional<LocalDateTime> fileCreationDate = new JSONReader(maybeOldFile).getFileCreationDate();
-    var fileExisted = fileCreationDate.isPresent();
+    parser.setContents(maybeOldFile);
+    Optional<LocalDateTime> fileCreationDate = parser.getDataCreationDate();
+    boolean fileExisted = fileCreationDate.isPresent();
 
-    ResponseManager responseAccumulator = new ResponseManager();
     ScheduledExecutorService ses = Executors.newScheduledThreadPool(1); 
 
     ses.scheduleAtFixedRate(() -> {
       if (remaining.get() <= 0) {
         try {
-          responseAccumulator.writeResponse(maybeOldFile);
+          accumulator.writeItems(maybeOldFile);
           ses.shutdown();
         } catch (Exception e) {
           e.printStackTrace();
         }
       } else {
         try {
+
+
+
           var URI = APIPresets.buildURI(limit, itemCode, cursor);
           var req = APIPresets.fetchPage(URI);
 
           HttpResponse<String> response = client.send(req,
               BodyHandlers.ofString());
           var body = response.body();
-          // var reader = new JSONReader(body);
-          // var date = reader.parseDate();
-          // if (fileExisted && date.isBefore(fileCreationDate.get())) {
-          //    List<LocalDateTime> dates = APIPresets.getListOfDates(body);
-          //    try {
-          //    int earlierDateIndex = APIPresets.
-          //      findEarlierDateIndex(dates, fileCreationDate.get());
-          //    responseAccumulator.appendResponse("{\"result\":{\"data\":{\"items\":[");
-          //    var eqs = reader.nodesToList(Equipment.class);
-          //    for (int i = 0; i + 1 > earlierDateIndex; i++) {
-          //      responseAccumulator.appendResponse(eqs.get(i).toString());
-          //    }
-          //    responseAccumulator.appendResponse("]}}}");
-          //    } catch (OutOfBoundsException e)  {
-          //      IO.println("There was no date that was earlier than" + 
-          //          "file creation date" + fileCreationDate.toString());
-          //    }
-          // };
+          parser.setContents(body);
+          var responseDate = parser.parseDate();
+          var items = parser.nodesToList(Equipment.class);
 
-          // gets transaction dates and converts to LocalDateTimes
-          // if (fileExisted) {
-          //   if (matchingDateIndex.isPresent()) {
-          //   }
-          // }
+          if (fileExisted && responseDate.isBefore(fileCreationDate.get())) {
+            var fileDate = fileCreationDate.get();
+            var breakEvenIndex = 0;
+            for (Equipment item : items) {
+              if (item.createdAt().toLocalDateTime().isBefore(fileDate)) {
+                break;
+              } else breakEvenIndex++;
+            }
+            accumulator.pushItems(items.subList(0, breakEvenIndex));
+            var fReader = new BufferedReader(new FileReader(maybeOldFile));
+            fReader.readLine();
+            var rest = remaining.get();
+            while (remaining.get() > 0) {
+              var line = fReader.readLine();
+              var item = mapper.readValue(line, Equipment.class);
+              accumulator.pushItem(item);
+              remaining.addAndGet(-1);
+            }
+            fReader.close();
+            System.out.printf("Had %d items cached", rest);
+            ses.shutdown();
+            return;
+          }
 
-          responseAccumulator.appendResponse(body + "\n");
+
+
+
+
+          accumulator.pushItems(items);
           cursor.set(mapper.readTree(response.body()).
               findPath("nextCursor").asString());
           remaining.addAndGet(-limit);
 
           IO.println("Next cursor: " + cursor.get());
           IO.println("Items remaining: " + remaining);
+
+
+
 
         } catch (JsonNodeException e) {
           System.out.printf("""
@@ -129,7 +147,7 @@ public class APIPresets {
               Processed %d items
               """.stripIndent(), itemCode, amount - remaining.get());
           try {
-            responseAccumulator.writeResponse(maybeOldFile);
+            accumulator.writeItems(maybeOldFile);
           } catch (Exception exc) {
             exc.printStackTrace();
           }
