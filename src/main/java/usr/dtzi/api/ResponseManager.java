@@ -51,4 +51,5 @@ public class ResponseManager {
   public void appendResponse(String s) {
     this.response = this.response.concat(s);
   }
+
 }

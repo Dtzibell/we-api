@@ -1,6 +1,7 @@
 package usr.dtzi.items;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +13,8 @@ public record Equipment(
     double price,
     String itemCode, 
     @JsonProperty("item") 
-    ItemDetails details) 
+    ItemDetails details,
+    ZonedDateTime createdAt) 
 
     implements Serializable {
 
