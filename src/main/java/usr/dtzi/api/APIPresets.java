@@ -1,6 +1,5 @@
 package usr.dtzi.api;
 
-import java.awt.Cursor;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -89,8 +88,6 @@ public class APIPresets {
       } else {
         try {
 
-
-
           var URI = APIPresets.buildURI(limit, itemCode, cursor);
           var req = APIPresets.fetchPage(URI);
 
@@ -115,19 +112,18 @@ public class APIPresets {
             var rest = remaining.get();
             while (remaining.get() > 0) {
               var line = fReader.readLine();
-              var item = mapper.readValue(line, Equipment.class);
-              accumulator.pushItem(item);
-              remaining.addAndGet(-1);
+              if (line != null) {
+                var item = mapper.readValue(line, Equipment.class);
+                accumulator.pushItem(item);
+                remaining.addAndGet(-1);
+              } else break;
             }
             fReader.close();
             System.out.printf("Had %d items cached", rest);
             ses.shutdown();
+            accumulator.writeItems(maybeOldFile);
             return;
           }
-
-
-
-
 
           accumulator.pushItems(items);
           cursor.set(mapper.readTree(response.body()).
@@ -136,9 +132,6 @@ public class APIPresets {
 
           IO.println("Next cursor: " + cursor.get());
           IO.println("Items remaining: " + remaining);
-
-
-
 
         } catch (JsonNodeException e) {
           System.out.printf("""
@@ -163,34 +156,5 @@ public class APIPresets {
 
   public static void getLargestOrder(String itemCode) {
     // get the largest buy order of an item.
-  }
-
-  private static List<LocalDateTime> getListOfDates (String response) {
-    var items = APIPresets.mapper.readTree(response).findPath("items");
-    var dates = items.findValues("createdAt")
-      .stream().map((JsonNode::asString)).toList();
-    List<LocalDateTime> ldts = dates.stream().map((date) -> {
-      return ZonedDateTime.parse(date).toLocalDateTime();
-    }
-      ).toList();
-    return ldts;
-  }
-
-  /**
-   * Thrown when array unexpectedly reached the end
-   */
-  private static class OutOfBoundsException extends Exception {
-    public OutOfBoundsException() {
-      super.getMessage();
-    }
-  }
-  private static int findEarlierDateIndex (List<LocalDateTime> dates, LocalDateTime fileDate) throws OutOfBoundsException{
-    for (int i = 0; i < dates.size(); i++) {
-      if (dates.get(i).isBefore(fileDate)) {
-        var matchingDateIndex = i;
-        return matchingDateIndex;
-      }
-    }
-    throw new APIPresets.OutOfBoundsException();
   }
 }

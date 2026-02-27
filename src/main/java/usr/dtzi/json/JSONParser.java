@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.time.format.DateTimeFormatterBuilder;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.MissingNode;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -83,6 +84,9 @@ public class JSONParser {
 
   public LocalDateTime parseDate() {
     var cursor = mapper.readTree(this.contents).findPath("nextCursor");
+    if (cursor instanceof MissingNode) {
+      return LocalDateTime.now();
+    }
     var date = parser.parse(cursor.asString());
     return date;
   }

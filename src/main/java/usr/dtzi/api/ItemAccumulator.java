@@ -43,6 +43,7 @@ public class ItemAccumulator<T> {
         writer.newLine();
       }
     } catch (IOException e) {
+      writer.flush();
       e.printStackTrace();
     }
   }
