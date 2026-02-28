@@ -1,7 +1,6 @@
 package usr.dtzi.items.filter;
 
 import usr.dtzi.items.Equipment;
-import java.util.function.Predicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +20,15 @@ public class ItemFilter {
    * @param   filter  a filter that items are passed by.
    * @return  a list containing items that pass {@code filter}.
    */
-  public List<Equipment> filter(Predicate<Equipment> filter) {
-    var newLst = new ArrayList<Equipment>();
-    for (Equipment item : this.eq) {
-      if (filter.test(item)) {
-        newLst.add(item);
-      };
+  public List<Equipment> filter(double rollEfficiency) {
+    List<Equipment> fEq = new ArrayList<>();
+    for (Equipment e : this.eq) {
+      var eff = ItemBounds.getRollEfficiency(e);
+      if (eff > rollEfficiency) {
+        fEq.add(e);
+      }
     }
-    return newLst;
+    return fEq;
   }
 }
 
