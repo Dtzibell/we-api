@@ -2,12 +2,17 @@ package usr.dtzi;
 
 import usr.dtzi.items.Equipment;
 import usr.dtzi.items.filter.ItemFilter;
-import usr.dtzi.json.JSONReader;
+import usr.dtzi.json.JSONParser;
 import usr.dtzi.api.APIPresets;
 import usr.dtzi.items.filter.ItemBounds;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.io.FileWriter;
@@ -56,42 +61,49 @@ public class App {
     "gloves6"
     );
     try {
-      new File("fullJSONs").mkdir();
-      new File("filteredJSONs").mkdir();
-
+      var fullJSONs = new File("fullJSONs");
+      var filteredJSONs = new File("filteredJSONs");
+      fullJSONs.mkdir(); filteredJSONs.mkdir();
+      
       for (String itemCode : items) {
-
         IO.println("Processing: " + itemCode);
-        var amount = 2000;
+        var amount = 100;
         APIPresets.getLatestTransactions(amount, itemCode);
-
-        var fullFile = new File("fullJSONs/" + itemCode + "_" + amount + ".json");
-        fullFile.createNewFile();
-        JSONReader reader = new JSONReader(fullFile);
-        List<Equipment> eq = reader.nodesToList(Equipment.class);
-
-        var filter = new ItemFilter(eq);
-        var filteredEq = filter.filter(ItemBounds::isWithin);
-        var filteredFile = new File("filteredJSONs/" + "filtered_" + itemCode + ".json");
-        filteredFile.createNewFile();
-
-        var fileWriter = new FileWriter(filteredFile);
-        var mapper = new ObjectMapper();
-        filteredEq.forEach((e) -> {
-            try {
-              fileWriter.write(mapper.writeValueAsString(e) + "\n");
-            } catch (IOException exc) {
-              exc.printStackTrace();
-            }
-        }
-        );
-        fileWriter.flush();
-        fileWriter.close();
-
         IO.println("Finished processing: " + itemCode);
+      }
+      for (File f : fullJSONs.listFiles()) {
+        var file = new File("filteredJSONs/" + f.getName());
+        var writer = new BufferedWriter(new FileWriter(file));
+        var fEq = App.filterEquipment(f, 0.7);
+        var mapper = new ObjectMapper();
+        fEq.forEach((eq) -> {
+          try {
+            writer.append(mapper.writeValueAsString(eq));
+            writer.newLine();
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
+        writer.flush();
+        writer.close();
       }
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  public static List<Equipment> filterEquipment(File f, double rollEff) throws FileNotFoundException, IOException {
+    var mapper = new ObjectMapper();
+    var reader = new BufferedReader(new FileReader(f));
+    var file = reader.readAllLines();
+    var fileContents = file.subList(1, file.size()-1);
+    var unfEq = new ArrayList<Equipment>();
+    fileContents.forEach((String item) -> 
+        unfEq.add(mapper.readValue(item, Equipment.class)));
+    var filter = new ItemFilter(unfEq);
+    var fEq = filter.filter(rollEff);
+    reader.close();
+    return fEq;
+
   }
 }

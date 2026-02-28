@@ -1,10 +1,14 @@
 package usr.dtzi.items;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public record Equipment(
 
@@ -12,13 +16,16 @@ public record Equipment(
     double price,
     String itemCode, 
     @JsonProperty("item") 
-    ItemDetails details) 
+    ItemDetails details,
+    ZonedDateTime createdAt) 
 
     implements Serializable {
 
+    @JsonIgnore
     public Integer getSkill1() {
       return this.details().skills().skill1();
     }
+    @JsonIgnore
     public Integer getSkill2() {
       return this.details().skills().skill2();
     }
